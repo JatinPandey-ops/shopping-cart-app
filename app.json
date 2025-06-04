@@ -13,9 +13,16 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.sarmillah.shoppingcart",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.sarmillah.shoppingcart",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -23,6 +30,21 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "17558f68-5377-4a0b-9b9f-336011430b67"
+      }
+    },
+    "owner": "ryzen_7788",
+    "plugins": [
+      [
+        "react-native-ble-plx",
+        {
+          "bluetoothAlwaysPermission": "Allow to connect to nearby smart carts.",
+          "bluetoothPeripheralPermission": "Needed to communicate with your shopping cart."
+        }
+      ]
+    ]
   }
 }
