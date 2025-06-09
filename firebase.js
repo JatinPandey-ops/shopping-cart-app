@@ -1,8 +1,7 @@
-// firebase.js
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore"; // ✅ add this
 
-// ← your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAb4EbbRBhZoYtW9gWWEnP20St4rj_QUME",
   authDomain: "shopping-cart-app-ded95.firebaseapp.com",
@@ -12,6 +11,7 @@ const firebaseConfig = {
   appId: "1:538095404600:web:1089030e963cda4cad48cd"
 };
 
-// initialize and export auth
 const app = initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
+export const db = getFirestore(app); // ✅ export Firestore instance
