@@ -11,32 +11,50 @@ const manager = new BleManager();
 
 export default function HomeScreen() {
   const [locationGranted, setLocationGranted] = useState(false);
+  const [permissionError, setPermissionError] = useState(null);
   const [devices, setDevices] = useState([]);
   const [connectedCart, setConnectedCart] = useState(null);
   const [cartCharacteristic, setCartCharacteristic] = useState(null);
   const [coords, setCoords] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const monitorRef = useRef(null);
+  const gpsWatcherRef = useRef(null);
 
   const navigation = useNavigation();
   const { addToCart, clearCart } = useContext(CartContext);
 
   useEffect(() => {
     requestPermissions();
-    return () => manager.destroy();
+    return () => {
+      manager.destroy();
+      stopGpsSync();
+    };
   }, []);
 
   const requestPermissions = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Location permission is required for Bluetooth scanning.');
-      return;
-    }
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setPermissionError('❌ Location permission denied. Please enable it to use Smart Cart.');
+        return;
+      }
 
-    setLocationGranted(true);
-    const loc = await Location.getCurrentPositionAsync({});
-    setCoords(loc.coords);
-    scanForDevices();
+      setLocationGranted(true);
+      setPermissionError(null);
+
+      gpsWatcherRef.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000,
+          distanceInterval: 2,
+        },
+        (loc) => setCoords(loc.coords)
+      );
+
+      scanForDevices();
+    } catch (err) {
+      setPermissionError(`❌ Error getting permission: ${err.message}`);
+    }
   };
 
   const scanForDevices = () => {
@@ -81,6 +99,8 @@ export default function HomeScreen() {
       setConnectedCart(discoveredDevice);
       setCartCharacteristic(char);
 
+      startGpsSync(connectedDevice, char);
+
       await char.monitor((error, characteristic) => {
         if (error) {
           console.log("❌ Notify error:", error.message);
@@ -119,6 +139,8 @@ export default function HomeScreen() {
       monitorRef.current.remove();
     }
 
+    stopGpsSync();
+
     setConnectedCart(null);
     setCartCharacteristic(null);
     scanForDevices();
@@ -144,6 +166,40 @@ export default function HomeScreen() {
     }
   };
 
+  const startGpsSync = async (device, char) => {
+    gpsWatcherRef.current = await Location.watchPositionAsync(
+      {
+        accuracy: Location.Accuracy.High,
+        timeInterval: 5000,
+        distanceInterval: 2,
+      },
+      async (loc) => {
+        setCoords(loc.coords);
+
+        const payload = `${loc.coords.latitude.toFixed(6)},${loc.coords.longitude.toFixed(6)}`;
+        const encoded = Buffer.from(payload).toString('base64');
+
+        try {
+          await device.writeCharacteristicWithResponseForService(
+            char.serviceUUID,
+            char.uuid,
+            encoded
+          );
+          console.log("📤 GPS sent:", payload);
+        } catch (err) {
+          console.log("❌ GPS send error:", err.message);
+        }
+      }
+    );
+  };
+
+  const stopGpsSync = () => {
+    if (gpsWatcherRef.current) {
+      gpsWatcherRef.current.remove();
+      gpsWatcherRef.current = null;
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>🔗 Connect to Smart Cart</Text>
@@ -157,8 +213,14 @@ export default function HomeScreen() {
             <Text style={styles.mapText}>🗺️ Map Preview</Text>
           </View>
 
-          <Text style={styles.coords}>Latitude: {coords?.latitude?.toFixed(4) || '--'}° N</Text>
-          <Text style={styles.coords}>Longitude: {coords?.longitude?.toFixed(4) || '--'}° E</Text>
+          {permissionError ? (
+            <Text style={styles.permissionError}>{permissionError}</Text>
+          ) : (
+            <>
+              <Text style={styles.coords}>Latitude: {coords?.latitude?.toFixed(4) || '--'}° N</Text>
+              <Text style={styles.coords}>Longitude: {coords?.longitude?.toFixed(4) || '--'}° E</Text>
+            </>
+          )}
 
           <TouchableOpacity style={[styles.navBtn, { backgroundColor: 'green' }]} onPress={() => sendCommand('START')}>
             <Text style={styles.navBtnText}>START CART</Text>
@@ -220,6 +282,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#121212', padding: 20, paddingTop: 60 },
   heading: { color: '#fff', fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   subtext: { color: '#aaa', fontSize: 16, marginBottom: 10, textAlign: 'center' },
+  permissionError: { color: '#ff4d4d', fontSize: 16, textAlign: 'center', marginBottom: 10 },
   deviceItem: { backgroundColor: '#1e1e1e', padding: 16, borderRadius: 10, marginBottom: 12 },
   deviceText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   deviceId: { color: '#888', fontSize: 12, marginTop: 4 },

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "my-shopping-cart-app",
+    "name": "Smart Cart",
     "slug": "my-shopping-cart-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,7 +21,10 @@
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "BLUETOOTH_SCAN",
-        "BLUETOOTH_CONNECT"
+        "BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_ADMIN",
+        "android.permission.BLUETOOTH_CONNECT"
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
