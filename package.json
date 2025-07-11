@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "DARK_MODE=media expo start --android",
     "ios": "DARK_MODE=media expo start --ios",
-    "web": "DARK_MODE=media expo start --web"
+    "web": "DARK_MODE=media expo start --web",
+    "prebuild": "expo prebuild"
   },
   "dependencies": {
     "@expo/html-elements": "0.4.2",
@@ -25,6 +26,7 @@
     "expo-status-bar": "~2.0.1",
     "firebase": "^11.6.0",
     "gluestack-ui": "^0.7.22",
+    "minimatch": "^10.0.3",
     "nativewind": "^4.1.23",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -32,6 +34,7 @@
     "react-native-ble-plx": "^3.5.0",
     "react-native-css-interop": "^0.1.22",
     "react-native-gesture-handler": "~2.20.2",
+    "react-native-maps": "1.18.0",
     "react-native-paper": "^5.13.3",
     "react-native-reanimated": "~3.16.1",
     "react-native-safe-area-context": "4.12.0",

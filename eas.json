@@ -9,7 +9,8 @@
       },
       "production": {
         "env": { "APP_ENV": "production" },
-        "android": { "buildType": "app-bundle" },
+        "distribution": "internal",
+        "android": { "buildType": "apk" },
         "ios": { "simulator": false }
       }
     },

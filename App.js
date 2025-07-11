@@ -9,7 +9,7 @@ const RootStack = createNativeStackNavigator();
 export default function App() {
   return (
     <CartProvider>
-      <StatusBar backgroundColor="#0b0b0b" barStyle="light-content" />
+      <StatusBar backgroundColor="#FCC316" barStyle="light-content" />
       <NavigationContainer>
         <RootStack.Navigator screenOptions={{ headerShown: false }}>
           <RootStack.Screen name="App" component={AppStack} />

@@ -1,9 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { CartContext } from '../context/CartContext';
 import { getItemById } from '../utility/getItemById';
-// import * as Print from 'expo-print';
-// import * as Sharing from 'expo-sharing';
 
 export default function BillScreen() {
   const { cartItems } = useContext(CartContext);
@@ -28,105 +26,151 @@ export default function BillScreen() {
   const tax = subtotal * 0.05;
   const total = subtotal + tax;
 
-//   const generatePdf = async () => {
-//     const html = `
-//       <html>
-//       <body style="font-family: Arial; padding: 20px;">
-//         <h2>Smart Cart Bill</h2>
-//         <p><b>Cart ID:</b> CART 1</p>
-//         <p><b>Date:</b> ${timestamp.toLocaleDateString()}<br/>
-//            <b>Time:</b> ${timestamp.toLocaleTimeString()}</p>
-//         <table border="1" cellpadding="8" cellspacing="0" width="100%">
-//           <thead><tr><th>Item</th><th>Qty</th><th>Price</th></tr></thead>
-//           <tbody>
-//             ${items.map(item => `
-//               <tr>
-//                 <td>${item.name}</td>
-//                 <td>${item.quantity}</td>
-//                 <td>MYR ${(item.price * item.quantity).toFixed(2)}</td>
-//               </tr>
-//             `).join('')}
-//           </tbody>
-//         </table>
-//         <p><b>Subtotal:</b> MYR ${subtotal.toFixed(2)}<br/>
-//            <b>Tax (5%):</b> MYR ${tax.toFixed(2)}<br/>
-//            <b>Total:</b> MYR ${total.toFixed(2)}</p>
-//         <hr/>
-//         <p>🛵 Delivery Mode: Follow/Manual</p>
-//         <p>🔋 Battery: 85%</p>
-//         <p style="text-align:center; margin-top: 20px;">THANK YOU FOR SHOPPING!</p>
-//       </body>
-//       </html>
-//     `;
-
-//     try {
-//       const { uri } = await Print.printToFileAsync({ html });
-//       await Sharing.shareAsync(uri);
-//     } catch (err) {
-//       Alert.alert('Error', 'Could not generate PDF');
-//     }
-//   };
-const generatePdf = async () => {
-  Alert.alert("Disabled", "PDF generation is currently turned off.");
-};
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🧾 BILL</Text>
-      <ScrollView contentContainerStyle={styles.box}>
-        <Text style={styles.cartLabel}>SMART CART</Text>
-        <Text style={styles.meta}>🛒 Cart ID: CART 1</Text>
-        <Text style={styles.meta}>📅 Date: {timestamp.toLocaleDateString()}</Text>
-        <Text style={styles.meta}>⏰ Time: {timestamp.toLocaleTimeString()}</Text>
-        <Text style={styles.meta}>✅ Status: Connected</Text>
+      <Text style={styles.title}>🧾 SMART CART BILL</Text>
+      <ScrollView contentContainerStyle={styles.receipt}>
+        {/* Receipt Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Smart Cart</Text>
+          <Text style={styles.headerSub}>Cart ID: CART 1</Text>
+          <Text style={styles.headerSub}>Date: {timestamp.toLocaleDateString()}</Text>
+          <Text style={styles.headerSub}>Time: {timestamp.toLocaleTimeString()}</Text>
+        </View>
 
-        <View style={styles.listHeader}>
-          <Text style={styles.th}>Item</Text>
-          <Text style={styles.th}>Qty</Text>
-          <Text style={styles.th}>Price</Text>
+        {/* Item List */}
+        <View style={styles.tableHeader}>
+          <Text style={[styles.cell, styles.th, { flex: 3 }]}>Item</Text>
+          <Text style={[styles.cell, styles.th, { flex: 1 }]}>Qty</Text>
+          <Text style={[styles.cell, styles.th, { flex: 1 }]}>Price</Text>
         </View>
 
         {items.map((item, idx) => (
           <View key={idx} style={styles.row}>
-            <Text style={styles.cell}>{item.name}</Text>
-            <Text style={styles.cell}>{item.quantity}</Text>
-            <Text style={styles.cell}>MYR {(item.price * item.quantity).toFixed(2)}</Text>
+            <Text style={[styles.cell, { flex: 3 }]}>{item.name}</Text>
+            <Text style={[styles.cell, { flex: 1 }]}>{item.quantity}</Text>
+            <Text style={[styles.cell, { flex: 1 }]}>{(item.price * item.quantity).toFixed(2)} RM</Text>
           </View>
         ))}
 
-        <Text style={styles.meta}>Subtotal: MYR {subtotal.toFixed(2)}</Text>
-        <Text style={styles.meta}>Tax (5%): MYR {tax.toFixed(2)}</Text>
-        <Text style={styles.total}>Total: MYR {total.toFixed(2)}</Text>
-        <Text style={styles.meta}>🚚 Delivery Mode: Follow/Manual</Text>
-        <Text style={styles.meta}>🔋 Battery Status: 85%</Text>
-        <Text style={styles.metaCenter}>THANK YOU FOR SHOPPING!</Text>
-      </ScrollView>
+        {/* Totals */}
+        <View style={styles.totals}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Subtotal</Text>
+            <Text style={styles.totalValue}>{subtotal.toFixed(2)} RM</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Tax (5%)</Text>
+            <Text style={styles.totalValue}>{tax.toFixed(2)} RM</Text>
+          </View>
+          <View style={[styles.totalRow, styles.totalRowFinal]}>
+            <Text style={styles.totalLabelFinal}>Total</Text>
+            <Text style={styles.totalValueFinal}>{total.toFixed(2)} RM</Text>
+          </View>
+        </View>
 
-      <TouchableOpacity style={styles.printBtn} onPress={generatePdf}>
-        <Text style={styles.printText}>PRINT</Text>
-      </TouchableOpacity>
+        {/* Footer */}
+        <Text style={styles.footer}>Thank you for shopping with Smart Cart!</Text>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  title: { color: '#fff', fontSize: 22, textAlign: 'center', marginTop: 20, marginBottom: 10, fontWeight: 'bold' },
-  box: { backgroundColor: '#1e1e1e', margin: 16, borderRadius: 12, padding: 16 },
-  cartLabel: { color: '#fff', fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
-  meta: { color: '#ccc', marginBottom: 4 },
-  metaCenter: { color: '#ccc', marginTop: 10, textAlign: 'center' },
-  listHeader: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 12, borderBottomWidth: 1, borderBottomColor: '#555', paddingBottom: 6 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  th: { color: '#ccc', fontWeight: 'bold', fontSize: 14 },
-  cell: { color: '#eee', fontSize: 14 },
-  total: { color: '#fff', fontSize: 16, marginTop: 8, fontWeight: 'bold' },
-  printBtn: {
-    backgroundColor: 'red',
-    paddingVertical: 14,
-    margin: 16,
-    borderRadius: 30,
-    alignItems: 'center',
+  container: {
+    flex: 1,
+    backgroundColor: '#fee7a2', 
   },
-  printText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  title: {
+    color: '#000',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  receipt: {
+    backgroundColor: '#fff9e8',
+    marginHorizontal: 16,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 4,
+  },
+  header: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    paddingBottom: 12,
+    marginBottom: 12,
+  },
+  headerText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
+  },
+  headerSub: {
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    paddingVertical: 8,
+  },
+  row: {
+    flexDirection: 'row',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  cell: {
+    color: '#000',
+    fontSize: 14,
+  },
+  th: {
+    fontWeight: 'bold',
+  },
+  totals: {
+    marginTop: 16,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  totalLabel: {
+    color: '#000',
+    fontSize: 14,
+  },
+  totalValue: {
+    color: '#000',
+    fontSize: 14,
+  },
+  totalRowFinal: {
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  totalLabelFinal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+  },
+  totalValueFinal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#F50D01', // Off Red for emphasis
+  },
+  footer: {
+    textAlign: 'center',
+    color: '#555',
+    fontSize: 14,
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    paddingTop: 10,
+  },
 });

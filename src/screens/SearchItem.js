@@ -14,54 +14,55 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { getItemByName } from '../utility/getItemByName';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 const { width } = Dimensions.get('window');
 
 export default function SearchItemScreen() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const controllerRef = useRef(null);
+  const [allItems, setAllItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
+  const [loading, setLoading] = useState(true);
   const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (controllerRef.current) {
-        controllerRef.current.abort();
-        controllerRef.current = null;
+
+    const fetchAllItems = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'items'));
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (mountedRef.current) {
+          setAllItems(items);
+          setFilteredItems(items);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('❌ Failed to fetch items:', err.message);
+        setLoading(false);
       }
-      return false;
-    });
+    };
+
+    fetchAllItems();
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => false);
 
     return () => {
       mountedRef.current = false;
-      if (controllerRef.current) {
-        controllerRef.current.abort();
-        controllerRef.current = null;
-      }
       backHandler.remove();
     };
   }, []);
 
-  const handleSearch = async (text) => {
+  const handleSearch = (text) => {
     setQuery(text);
-    if (text.length < 2) {
-      setResults([]);
-      return;
-    }
-
-    setLoading(true);
-    if (controllerRef.current) controllerRef.current.abort();
-
-    const controller = new AbortController();
-    controllerRef.current = controller;
-
-    const items = await getItemByName(text, controller.signal);
-    if (!controller.signal.aborted && mountedRef.current) {
-      setResults(items);
-      setLoading(false);
+    if (text.trim().length === 0) {
+      setFilteredItems(allItems);
+    } else {
+      const filtered = allItems.filter(item =>
+        item.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredItems(filtered);
     }
   };
 
@@ -72,7 +73,7 @@ export default function SearchItemScreen() {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <Text style={styles.heading}>🔎 Find Items in Store</Text>
+          <Text style={styles.heading}>🔎 All Store Items</Text>
 
           <TextInput
             placeholder="Search item name..."
@@ -82,13 +83,13 @@ export default function SearchItemScreen() {
             onChangeText={handleSearch}
           />
 
-          {loading && <ActivityIndicator color="#00C897" size="large" style={{ marginBottom: 20 }} />}
+          {loading && <ActivityIndicator color="#F50D01" size="large" style={{ marginTop: 30 }} />}
 
-          {!loading && results.length === 0 && query.length >= 2 && (
+          {!loading && filteredItems.length === 0 && (
             <Text style={styles.empty}>No matching items found.</Text>
           )}
 
-          {!loading && results.map((item, index) => (
+          {!loading && filteredItems.map((item, index) => (
             <View key={`${item.id}-${index}`} style={styles.card}>
               <Image
                 source={{ uri: item.image }}
@@ -98,6 +99,7 @@ export default function SearchItemScreen() {
               <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle}>{item.name}</Text>
                 <Text style={styles.cardLocation}>📍 {item.location}</Text>
+                <Text style={styles.cardInventory}>📦 Stock: {item.inventory || 0}</Text>
                 <Text style={styles.cardPrice}>RM {item.price.toFixed(2)}</Text>
               </View>
             </View>
@@ -109,18 +111,29 @@ export default function SearchItemScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, backgroundColor: '#121212', padding: 20, paddingTop: 60 },
-  heading: { color: '#fff', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 16 },
+  container: {
+    flexGrow: 1,
+    backgroundColor: '#fee7a2', // Mikado Yellow background
+    padding: 20,
+    paddingTop: 60,
+  },
+  heading: {
+    color: '#000',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
   input: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#FFC219',
     borderRadius: 10,
     padding: 14,
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
     marginBottom: 20,
   },
   card: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: '#FFC219',
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -128,20 +141,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
-    elevation: 6,
+    elevation: 5,
   },
   image: {
     width: width * 0.28,
     height: width * 0.28,
     borderRadius: 12,
-    backgroundColor: '#333',
+    backgroundColor: '#FFED9D',
     marginRight: 16,
   },
   cardInfo: { flex: 1 },
-  cardTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 4 },
-  cardLocation: { color: '#ccc', fontSize: 14, marginBottom: 4 },
-  cardPrice: { color: '#00C897', fontSize: 16, fontWeight: '600' },
-  empty: { color: '#888', textAlign: 'center', marginTop: 30, fontSize: 16 },
+  cardTitle: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  cardLocation: {
+    color: '#333',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  cardInventory: {
+    color: '#555',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  cardPrice: {
+    color: '#F50D01',
+    fontWeight: '600',
+  },
+  empty: {
+    color: '#F50D01',
+    textAlign: 'center',
+    marginTop: 30,
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

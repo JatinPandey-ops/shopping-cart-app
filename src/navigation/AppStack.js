@@ -1,6 +1,7 @@
 // src/navigation/AppStack.js
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Image } from 'react-native';
 import BottomTabs from './BottomTabs';
 import BillScreen from '../screens/BillScreen';
 import CartControlScreen from '../screens/CartControlScreen';
@@ -13,31 +14,49 @@ export default function AppStack() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#0b0b0b',
+          backgroundColor: '#FCC316', 
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.2,
           shadowRadius: 4,
-          paddingTop: 12,     // ✅ Top padding
-          paddingBottom: 12,  // ✅ Bottom padding
+          paddingTop: 12,     
+          paddingBottom: 12, 
         },
         headerTitleStyle: {
-          color: '#fff',
+          color: '#212121', 
           fontWeight: 'bold',
           fontSize: 18,
         },
-        headerTintColor: '#fff',
+        headerTintColor: '#212121', 
       }}
     >
       <Stack.Screen
         name="Main"
         component={BottomTabs}
-        options={{ headerShown: false }} // Hide header for BottomTabs
+        options={{ headerShown: false }} 
       />
-      <Stack.Screen name="Bill" component={BillScreen} />
-      <Stack.Screen name="CartControl" component={CartControlScreen} />
-      <Stack.Screen name="SearchItem" component={SearchItemScreen} />
+      <Stack.Screen
+        name="Bill"
+        component={BillScreen}
+        options={{
+          headerTitle: 'Bill Summary', 
+        }}
+      />
+      <Stack.Screen
+        name="CartControl"
+        component={CartControlScreen}
+        options={{
+          headerTitle: 'Cart Control',
+        }}
+      />
+      <Stack.Screen
+        name="SearchItem"
+        component={SearchItemScreen}
+        options={{
+          headerTitle: 'Search Item',
+        }}
+      />
     </Stack.Navigator>
   );
 }

@@ -1,4 +1,5 @@
 import React, { createContext, useState } from 'react';
+import { Alert } from 'react-native';
 
 export const CartContext = createContext();
 
@@ -7,12 +8,19 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
 
   // Add new item or increment if already exists
-  const addToCart = (itemId) => {
-    setCartItems((prev) => ({
+const addToCart = (itemId, maxQty = Infinity) => {
+  setCartItems((prev) => {
+    const currentQty = prev[itemId] || 0;
+    if (currentQty >= maxQty) {
+      Alert.alert('Out of Stock', 'You’ve already added all available stock of this item.');
+      return prev; // block add
+    }
+    return {
       ...prev,
-      [itemId]: (prev[itemId] || 0) + 1,
-    }));
-  };
+      [itemId]: currentQty + 1,
+    };
+  });
+};
 
   // Remove item completely
   const removeFromCart = (itemId) => {
@@ -22,12 +30,19 @@ export const CartProvider = ({ children }) => {
   };
 
   // Increase quantity of item
-  const incrementQty = (itemId) => {
-    setCartItems((prev) => ({
+ const incrementQty = (itemId, maxQty = Infinity) => {
+  setCartItems((prev) => {
+    const currentQty = prev[itemId] || 0;
+    if (currentQty >= maxQty) {
+      Alert.alert('Out of Stock', 'You’ve already added all available stock of this item.');
+      return prev; // block increment
+    }
+    return {
       ...prev,
-      [itemId]: (prev[itemId] || 0) + 1,
-    }));
-  };
+      [itemId]: currentQty + 1,
+    };
+  });
+};
 
   // Decrease quantity (and remove if it hits 0)
   const decrementQty = (itemId) => {
